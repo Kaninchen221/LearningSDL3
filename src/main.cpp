@@ -203,13 +203,25 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppIterate(void *appstate) {
     auto* app = (AppContext*)appstate;
     
+    bool drawText = true;
+
+    // Input handling
+    SDL_PumpEvents();
+    const bool* keyStates = SDL_GetKeyboardState(NULL);
+
+    // Push T to hide text
+    if (keyStates[SDL_SCANCODE_T])
+        drawText = !drawText;
+
+    // Rendering
     SDL_SetRenderDrawColor(app->renderer, app->clearColor.r, app->clearColor.g, app->clearColor.b, app->clearColor.a);
     SDL_RenderClear(app->renderer);
 
     // Renderer uses the painter's algorithm to make the text appear above the image, we must render the image first.
     DrawSprites(app->renderer, app->atlasTexture, app->sprites);
 
-    SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);
+    if (drawText)
+        SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);
 
     SDL_RenderPresent(app->renderer);
 
