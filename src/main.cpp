@@ -43,10 +43,23 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         return SDL_Fail();
     }
     
-    // create a window
+    // create a window and config it
    
     SDL_Window* window = SDL_CreateWindow("SDL Minimal Sample", windowStartWidth, windowStartHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
     if (not window){
+        return SDL_Fail();
+    }
+
+    // Hides the cursor
+//    if (not SDL_SetWindowRelativeMouseMode(window, true /* enabled */))
+//    {
+//        SDL_Log(SDL_GetError());
+//        return SDL_Fail();
+//    }
+    
+    if (not SDL_ShowCursor())
+    {
+        SDL_Log(SDL_GetError());
         return SDL_Fail();
     }
     
@@ -213,6 +226,18 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // Push T to hide text
     if (keyStates[SDL_SCANCODE_T])
         drawText = !drawText;
+
+    // Mouse
+    SDL_FPoint mousePosition;
+    auto mouseFlags = SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+    //SDL_Log("%f %f", mousePosition.x, mousePosition.y);
+
+    // Move a sprite at the index 0 to the mouse position
+    if (not app->sprites.empty())
+    {
+        app->sprites[0].destRect.x = mousePosition.x;
+        app->sprites[0].destRect.y = mousePosition.y;
+    }
 
     // Rendering
     SDL_SetRenderDrawColor(app->renderer, app->clearColor.r, app->clearColor.g, app->clearColor.b, app->clearColor.a);
