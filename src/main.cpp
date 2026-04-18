@@ -1,23 +1,13 @@
 #define SDL_MAIN_USE_CALLBACKS  // This is necessary for the new callbacks API. To use the legacy API, don't define this. 
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include <SDL3_mixer/SDL_mixer.h>
-#include <SDL3_image/SDL_image.h>
 #include <cmath>
 #include <string_view>
 #include <filesystem>
 #include <thread>
 
+#include "sprite.hpp"
+
 constexpr uint32_t windowStartWidth = 400;
 constexpr uint32_t windowStartHeight = 400;
-
-struct Sprite
-{
-    SDL_FRect sourceRect;
-    SDL_FRect destRect;
-};
 
 struct AppContext {
     SDL_Window* window;
@@ -217,10 +207,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_RenderClear(app->renderer);
 
     // Renderer uses the painter's algorithm to make the text appear above the image, we must render the image first.
-    for (const auto& sprite : app->sprites)
-    {
-        SDL_RenderTexture(app->renderer, app->atlasTexture, &sprite.sourceRect, &sprite.destRect);
-    }
+    DrawSprites(app->renderer, app->atlasTexture, app->sprites);
 
     SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);
 
