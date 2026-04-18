@@ -209,6 +209,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_PumpEvents();
     const bool* keyStates = SDL_GetKeyboardState(NULL);
 
+    // States
     // Push T to hide text
     if (keyStates[SDL_SCANCODE_T])
         drawText = !drawText;
