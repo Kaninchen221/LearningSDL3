@@ -150,6 +150,7 @@ else()
     copy_helper("Inter-VariableFont.ttf")
     copy_helper("the_entertainer.ogg")
     copy_helper("gs_tiger.svg")
+    copy_helper("tile_texture.png")
 endif()
 
 # set some extra configs for each platform
