@@ -39,6 +39,7 @@ endif()
 # Add your sources to the target
 target_sources(${EXECUTABLE_NAME} 
 PRIVATE 
+	src/rain.hpp
 	src/sprite.hpp
     src/main.cpp
     src/iosLaunchScreen.storyboard

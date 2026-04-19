@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "sprite.hpp"
+#include "rain.hpp"
 
 constexpr uint32_t windowStartWidth = 400;
 constexpr uint32_t windowStartHeight = 400;
@@ -19,7 +20,9 @@ struct AppContext {
     MIX_Track* track;
     SDL_AppResult app_quit = SDL_APP_CONTINUE;
     SDL_Color clearColor;
+    SDL_Time prevTime{};
     std::vector<Sprite> sprites;
+    Rain rain;
 };
 
 SDL_AppResult SDL_Fail(){
@@ -183,6 +186,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         }
     };
 
+    Rain rain;
+    rain.init();
+
     // set up the application data
     *appstate = new AppContext{
        .window = window,
@@ -193,11 +199,12 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
        .track = mixerTrack,
        .app_quit = SDL_APP_CONTINUE,
        .clearColor = { 0, 0, 0, 255 },
-       .sprites = std::move(sprites)
+       .sprites = std::move(sprites),
+       .rain = std::move(rain)
     };
     
-    SDL_SetRenderVSync(renderer, -1);   // enable vysnc
-    
+    SDL_SetRenderVSync(renderer, -1); // enable vysnc
+
     SDL_Log("Application started successfully!");
 
     return SDL_APP_CONTINUE;
@@ -217,6 +224,15 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     auto* app = (AppContext*)appstate;
     
     bool drawText = true;
+
+    // Tick logic
+    const auto currentTime = SDL_GetTicks();
+    const auto currentTimeDiff = currentTime - app->prevTime;
+    app->prevTime = currentTime;
+    const float deltaSeconds = currentTimeDiff / 1000.f; // milliseconds to seconds
+    //SDL_Log("%f", deltaSeconds);
+
+    app->rain.update(deltaSeconds);
 
     // Input handling
     SDL_PumpEvents();
@@ -245,6 +261,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
     // Renderer uses the painter's algorithm to make the text appear above the image, we must render the image first.
     DrawSprites(app->renderer, app->atlasTexture, app->sprites);
+
+    app->rain.draw(app->renderer);
 
     if (drawText)
         SDL_RenderTexture(app->renderer, app->messageTex, NULL, &app->messageDest);
