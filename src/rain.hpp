@@ -13,8 +13,7 @@ public:
 	SDL_Color color{ 0, 0, 255, 255 };
 	float speed = 100.f;
 	int64_t count = 400;
-	SDL_FPoint singleDropSize{ 2, 4 };
-	
+	SDL_FPoint sizePerEntity{ 2, 4 };
 	float dropTimeCost = 0.2;
 
 	void init();
@@ -25,38 +24,40 @@ public:
 
 private:
 
-	SDL_FPoint randPointWithinboundss();
+	SDL_FPoint randPointWithinBounds();
 
-	std::vector<SDL_FPoint> points;
+	std::vector<SDL_FRect> entities;
 	float timePool = 0.f;
 };
 
 void Rain::init()
 {
-	points.reserve(count);
+	entities.reserve(count);
 }
 
 void Rain::update(float deltaSeconds)
 {
-	if (points.size() < points.capacity())
+	if (entities.size() < entities.capacity())
 	{
 		timePool += deltaSeconds;
 		while (timePool > dropTimeCost)
 		{
 			timePool -= dropTimeCost;
-			auto point = randPointWithinboundss();
-			points.push_back(point);
+			auto point = randPointWithinBounds();
+			entities.push_back(SDL_FRect{ point.x, point.y, sizePerEntity.x, sizePerEntity.y });
 		}
 	}
 
 	// Update position
-	for (auto& point : points)
+	for (auto& entity : entities)
 	{
-		point.y += deltaSeconds * speed;
+		entity.y += deltaSeconds * speed;
 
-		if (point.y > bounds.x + bounds.h)
+		if (entity.y > bounds.x + bounds.h)
 		{
-			point = randPointWithinboundss();
+			auto newPosition = randPointWithinBounds();
+			entity.x = newPosition.x;
+			entity.y = newPosition.y;
 		}
 	}
 }
@@ -65,18 +66,17 @@ void Rain::draw(auto* renderer)
 {
 	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 
-	SDL_FRect rect{ 0, 0, singleDropSize.x, singleDropSize.y };
-	for (const auto& point : points)
+	for (const auto& entity : entities)
 	{
-		rect.x = point.x;
-		rect.y = point.y;
-
-		// TODO: Heavy, could be optimized
-		SDL_RenderRect(renderer, &rect);
+		// TODO: Could be heavy because of a possible alloc on the heap
+		SDL_RenderRect(renderer, &entity);
 	}
+	
+	// It has just a render rect inside
+	//SDL_RenderRects(renderer, entities.data(), entities.size());
 }
 
-inline SDL_FPoint Rain::randPointWithinboundss()
+inline SDL_FPoint Rain::randPointWithinBounds()
 {
 	return { SDL_randf() * bounds.w + bounds.x, bounds.y /* SDL_randf() * bounds.h + bounds.y */ };
 }
