@@ -26,82 +26,66 @@ struct AppContext {
 };
 
 SDL_AppResult SDL_Fail(){
-    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "SDL Error %s", SDL_GetError());
     return SDL_APP_FAILURE;
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     // init the library, here we make a window so we only need the Video capabilities.
-    if (not SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)){
-        return SDL_Fail();
-    }
+	if (not SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
+		return SDL_Fail();
     
     // init TTF
-    if (not TTF_Init()) {
-        return SDL_Fail();
-    }
+    if (not TTF_Init()) 
+		return SDL_Fail();
     
     // init Mixer
-    if (not MIX_Init()) {
-        return SDL_Fail();
-    }
+	if (not MIX_Init())
+		return SDL_Fail();
     
     // create a window and config it
    
     SDL_Window* window = SDL_CreateWindow("SDL Minimal Sample", windowStartWidth, windowStartHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
-    if (not window){
-        return SDL_Fail();
-    }
+	if (not window)
+		return SDL_Fail();
 
     // Hides the cursor
 //    if (not SDL_SetWindowRelativeMouseMode(window, true /* enabled */))
-//    {
-//        SDL_Log(SDL_GetError());
 //        return SDL_Fail();
-//    }
     
     if (not SDL_ShowCursor())
-    {
-        SDL_Log(SDL_GetError());
         return SDL_Fail();
-    }
     
     // create a renderer
     SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
-    if (not renderer){
-        return SDL_Fail();
-    }
+	if (not renderer) 
+		return SDL_Fail();
     
     // load the font
 #if __ANDROID__
     std::filesystem::path basePath = "";   // on Android we do not want to use basepath. Instead, assets are available at the root directory.
 #else
     auto basePathPtr = SDL_GetBasePath();
-     if (not basePathPtr){
-        return SDL_Fail();
-    }
-     const std::filesystem::path basePath = basePathPtr;
+	if (not basePathPtr)
+		return SDL_Fail();
+    const std::filesystem::path basePath = basePathPtr;
 #endif
 
     const auto fontPath = basePath / "Inter-VariableFont.ttf";
     TTF_Font* font = TTF_OpenFont(fontPath.string().c_str(), 36);
-    if (not font) {
-        return SDL_Fail();
-    }
+	if (not font)
+		return SDL_Fail();
 
     // render the font to a surface
     const std::string_view text = "Hello SDL!";
     SDL_Surface* surfaceMessage = TTF_RenderText_Solid(font, text.data(), text.length(), { 255,255,255 });
     if (not surfaceMessage)
-        return SDL_Fail();
+		return SDL_Fail();
 
     // make a texture from the surface
     SDL_Texture* messageTex = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
     if (not messageTex)
-    {
-        SDL_Log(SDL_GetError());
 		return SDL_Fail();
-    }
 
     // we no longer need the font or the surface, so we can destroy those now.
     TTF_CloseFont(font);
@@ -111,15 +95,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     auto svg_surface = IMG_Load((basePath / "tile_texture.png").string().c_str());
     SDL_Texture* atlasTexture = SDL_CreateTextureFromSurface(renderer, svg_surface);
 	if (not atlasTexture)
-	{
-		SDL_Log(SDL_GetError());
 		return SDL_Fail();
-	}
 
     SDL_DestroySurface(svg_surface);
 
     // get the on-screen dimensions of the text. this is necessary for rendering it
     auto messageTexProps = SDL_GetTextureProperties(messageTex);
+	if (not messageTexProps)
+		return SDL_Fail();
+
     SDL_FRect text_rect{
             .x = 0,
             .y = 0,
@@ -129,28 +113,33 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
     // init SDL Mixer
     MIX_Mixer* mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
-	if (not mixer) {
-		SDL_Log(SDL_GetError());
+	if (not mixer)
         return SDL_Fail();
-    }
     
     auto mixerTrack = MIX_CreateTrack(mixer);
+    if (not mixerTrack)
+		return SDL_Fail();
 
     // load the music
     auto musicPath = basePath / "the_entertainer.ogg";
     auto music = MIX_LoadAudio(mixer,musicPath.string().c_str(),false);
-    if (not music) {
-        return SDL_Fail();
-    }
+    if (not music)
+		return SDL_Fail();
 
     // play the music (does not loop)
-    MIX_SetTrackAudio(mixerTrack, music);
-    MIX_PlayTrack(mixerTrack, NULL);
+    if (not MIX_SetTrackAudio(mixerTrack, music))
+		return SDL_Fail();
+
+    if (not MIX_PlayTrack(mixerTrack, NULL))
+		return SDL_Fail();
     
-    MIX_StopTrack(mixerTrack, NULL);
+    if (not MIX_StopTrack(mixerTrack, NULL))
+		return SDL_Fail();
 
     // print some information about the window
-    SDL_ShowWindow(window);
+    if (not SDL_ShowWindow(window))
+		return SDL_Fail();
+
     {
         int width, height, bbwidth, bbheight;
         SDL_GetWindowSize(window, &width, &height);
@@ -203,7 +192,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
        .rain = std::move(rain)
     };
     
-    SDL_SetRenderVSync(renderer, -1); // enable vysnc
+    if (not SDL_SetRenderVSync(renderer, -1)) // enable vysnc
+    {
+        SDL_LogWarn(SDL_LOG_CATEGORY_CUSTOM, "SDL Error %s", SDL_GetError());
+    }
 
     SDL_Log("Application started successfully!");
 

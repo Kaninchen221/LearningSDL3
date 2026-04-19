@@ -69,6 +69,7 @@ void Rain::draw(auto* renderer)
 	for (const auto& entity : entities)
 	{
 		// TODO: Could be heavy because of a possible alloc on the heap
+		// TODO: Not filled rect, handle It
 		SDL_RenderRect(renderer, &entity);
 	}
 	
