@@ -230,6 +230,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     const auto currentTimeDiff = currentTime - app->prevTime;
     app->prevTime = currentTime;
     const float deltaSeconds = currentTimeDiff / 1000.f; // milliseconds to seconds
+    
+    // Handle a big delta seconds
+    // It could happen when we move the window
+    if (deltaSeconds > 1.f)
+    {
+        SDL_Log("Skip iterate because of the big delta seconds: %f", deltaSeconds);
+        return app->app_quit;
+    }
     //SDL_Log("%f", deltaSeconds);
 
     app->rain.update(deltaSeconds);
